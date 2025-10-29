@@ -21,6 +21,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
+                echo "Student: ${params.STUDENT_NAME}"
                 echo "Checking out branch: ${params.BRANCH_NAME}"
                 checkout scm
             }
@@ -36,13 +37,15 @@ pipeline {
         stage('Build') {
             steps {
                 echo "Building version ${APP_VERSION} for ${params.ENVIRONMENT} environment"
-                bat '''
+                echo "Built by: ${params.STUDENT_NAME}"
+                bat """
                 echo Simulating build process...
                 if not exist build mkdir build
                 copy src\\*.js build\\
                 echo Build completed successfully!
-                echo App version: %APP_VERSION% > build\\version.txt
-                '''
+                echo App version: ${APP_VERSION} > build\\version.txt
+                echo Built by: ${params.STUDENT_NAME} >> build\\version.txt
+                """
             }
         }
 
@@ -59,13 +62,14 @@ pipeline {
         stage('Package') {
             steps {
                 echo "Creating zip archive for version ${APP_VERSION}"
-                bat 'powershell Compress-Archive -Path build\\* -DestinationPath build_%APP_VERSION%.zip'
+                bat "powershell Compress-Archive -Path build\\* -DestinationPath build_${APP_VERSION}.zip"
             }
         }
 
         stage('Deploy (Simulation)') {
             steps {
                 echo "Simulating deployment of version ${APP_VERSION} to ${params.ENVIRONMENT}"
+                echo "Deployment initiated by: ${params.STUDENT_NAME}"
             }
         }
     }
@@ -76,10 +80,12 @@ pipeline {
             deleteDir()
         }
         success {
-            echo "Pipeline succeeded! Version ${APP_VERSION} built and tested."
+            echo "Pipeline succeeded!"
+            echo "Version ${APP_VERSION} built, tested, and packaged by ${params.STUDENT_NAME}"
         }
         failure {
             echo "Pipeline failed! Check console output for details."
+            echo "Responsible: ${params.STUDENT_NAME}"
         }
     }
 }
